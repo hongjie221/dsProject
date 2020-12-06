@@ -1,0 +1,356 @@
+---
+title: "final project"
+author: "Zixin Wu"
+date: "11/28/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Setup
+```{r}
+library(tidyverse)
+library(modelr)
+library(ggplot2)
+setwd("C:/Users/zwu_u/Desktop/CS5110/project/house-prices-advanced-regression-techniques")
+houseTest <- read.csv("test.csv")
+houseTrain <-read.csv("train.csv")
+house <- bind_rows(houseTest,houseTrain)
+house <- as_tibble(house)
+houseTrain <- as_tibble(houseTrain)
+houseTrain
+```
+
+```{r}
+houseTrain %>%
+  ggplot(aes(x=log2(LotArea),y=log2(SalePrice))) +
+  geom_point() +
+  geom_smooth() +
+  geom_smooth(method="lm",color="red") +
+  labs(x = "Lot Size",
+       y = "Sale price",
+       title = "Relationship between house price and Lot size")
+
+houseTrain %>%
+  ggplot(aes(x=OverallQual,y=log2(SalePrice))) +
+  geom_point() +
+  geom_smooth() +
+  geom_smooth(method="lm",color="red") +
+  labs(x = "Overall Quality",
+       y = "Sale price",
+       title = "Relationship between house price and Overall Quality")
+
+houseTrain %>%
+  ggplot(aes(x=GarageArea,y=log2(SalePrice))) +
+  geom_point() + 
+  coord_cartesian(xlim = c(0,998)) +
+  geom_smooth() +
+  geom_smooth(method="lm",color="red") +
+  labs(x = "Size of garage in square feet",
+       y = "Sale price",
+       title = "Relationship between house price and Size of garage in square feet")
+
+houseTrain %>%
+  ggplot(aes(x=MoSold,y=log2(SalePrice))) +
+  geom_point() +
+  geom_smooth() +
+  geom_smooth(method="lm",color="red") +
+  labs(x = "Month Sold",
+       y = "Sale price",
+       title = "Relationship between house price and Month Sold")
+
+houseTrain %>%
+  ggplot(aes(x=MSZoning,y=log2(SalePrice))) +
+  geom_boxplot() +
+  labs(x = "General zoning classification",
+       y = "Sale price",
+       title = "Relationship between house price and General zoning classification")
+
+houseTrain %>%
+  ggplot(aes(x=BldgType,y=log2(SalePrice))) +
+  geom_boxplot() +
+  labs(x = "Type of dwelling",
+       y = "Sale price",
+       title = "Relationship between house price and Type of dwelling")
+
+houseTrain %>%
+  ggplot(aes(x=Foundation,y=log2(SalePrice))) +
+  geom_boxplot() +
+  labs(x = "Type of foundation",
+       y = "Sale price",
+       title = "Relationship between house price and Type of foundation")
+
+houseTrain %>%
+  ggplot(aes(x=Utilities,y=log2(SalePrice))) +
+  geom_point() +
+  labs(x = "Type of utilities available",
+       y = "Sale price",
+       title = "Relationship between house price and Type of utilities available")
+```
+From the plotting, I found some of the predictors are reasonable. Based on visualization, the size of garage in square feet appears to have the strongest linear relationship with house price. Therefore, the size of garge will be used as our single predictor
+
+```{r}
+fit <- lm(log2(SalePrice) ~ OverallQual, data = houseTrain)
+summary(fit)
+
+g1 <- houseTrain %>%
+  add_residuals(fit, "resid") %>%
+  ggplot(aes(x=OverallQual,
+            y=resid,
+            group=OverallQual)) +
+  geom_point()
+g2 <- houseTrain %>%
+  add_residuals(fit,"resid") %>%
+  ggplot(aes(resid)) +
+  geom_histogram(bins=100) 
+gridExtra::grid.arrange(g1, g2, ncol=2)
+```
+
+```{r}
+outliers <- houseTrain %>%
+  add_residuals(fit, "resid") %>%
+  filter(resid > 1 | resid < -1)
+houseTrain2 <- houseTrain %>%
+  anti_join(outliers, by=c("Id"="Id"))
+
+fit1 <- lm(SalePrice ~ OverallQual, data = houseTrain2)
+summary(fit1)
+
+g1 <- houseTrain2 %>%
+  add_residuals(fit, "resid") %>%
+  ggplot(aes(x=OverallQual,
+            y=resid,
+            group=OverallQual)) +
+  geom_point()
+g2 <- houseTrain2 %>%
+  add_residuals(fit,"resid") %>%
+  ggplot(aes(sample=resid)) +
+  geom_qq() 
+gridExtra::grid.arrange(g1, g2, ncol=2)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+fit2 <- lm(log2(SalePrice) ~ log2(LotArea), data = houseTrain2)
+summary(fit2)
+
+
+
+g1 <- houseTrain2 %>%
+  add_residuals(fit2, "resid") %>%
+  ggplot(aes(x=log2(LotArea),
+            y=resid)) +
+  geom_point()
+g2 <- houseTrain2 %>%
+  add_residuals(fit2,"resid") %>%
+  ggplot(aes(sample=resid)) +
+  geom_qq()
+gridExtra::grid.arrange(g1, g2, ncol=2)
+```
+```{r}
+outliers1 <- houseTrain2 %>%
+  add_residuals(fit2, "resid") %>%
+  filter(resid > 1.5 | resid < -1.5)
+houseTrain3 <- houseTrain2 %>%
+  anti_join(outliers1, by=c("Id"="Id"))
+
+fit3 <- lm(log(SalePrice) ~ log2(LotArea), data = houseTrain3)
+summary(fit3)
+
+g3 <- houseTrain3 %>%
+  add_residuals(fit3, "resid") %>%
+  ggplot(aes(x=log2(LotArea),
+            y=resid)) +
+  geom_point()
+g4 <- houseTrain3 %>%
+  add_residuals(fit3,"resid") %>%
+  ggplot(aes(sample=resid)) +
+  geom_qq()
+gridExtra::grid.arrange(g3, g4, ncol=2)
+
+```
+
+```{r}
+fit4 <- lm(log2(SalePrice) ~ GarageArea, data = houseTrain3)
+summary(fit4)
+
+
+
+g1 <- houseTrain3 %>%
+  add_residuals(fit4, "resid") %>%
+  ggplot(aes(x=GarageArea,
+            y=resid)) +
+  geom_point()
+g2 <- houseTrain3 %>%
+  add_residuals(fit4,"resid") %>%
+  ggplot(aes(sample=resid)) +
+  geom_qq()
+gridExtra::grid.arrange(g1, g2, ncol=2)
+```
+```{r}
+outliers2 <- houseTrain3 %>%
+  add_residuals(fit4, "resid") %>%
+  filter(resid < -1.5)
+houseTrain4 <- houseTrain3 %>%
+  anti_join(outliers2, by=c("Id"="Id"))
+
+fit4 <- lm(log2(SalePrice) ~ GarageArea, data = houseTrain4)
+summary(fit4)
+
+g1 <- houseTrain4 %>%
+  add_residuals(fit4, "resid") %>%
+  ggplot(aes(x=GarageArea,
+            y=resid)) +
+  geom_point()
+g2 <- houseTrain4 %>%
+  add_residuals(fit4,"resid") %>%
+  ggplot(aes(sample=resid)) +
+  geom_qq()
+gridExtra::grid.arrange(g1, g2, ncol=2)
+```
+
+
+
+
+
+
+
+## Stepwise
+```{r}
+set.seed(2)
+houseTrainPart <- resample_partition(houseTrain4, p=c(train=0.5, valid=0.25, test=0.25))
+
+```
+
+step 1:
+```{r}
+r1 <- lm(log2(SalePrice) ~ OverallQual, data = houseTrainPart$train)
+r2 <- lm(log2(SalePrice) ~ log2(LotArea), data = houseTrainPart$train)
+r3 <- lm(log2(SalePrice) ~ GarageArea, data = houseTrainPart$train)
+r4 <- lm(log2(SalePrice) ~ MoSold, data = houseTrainPart$train)
+r5 <- lm(log2(SalePrice) ~ MSZoning, data = houseTrainPart$train)
+r6 <- lm(log2(SalePrice) ~ BldgType, data = houseTrainPart$train)
+r7 <- lm(log2(SalePrice) ~ Foundation, data = houseTrainPart$train)
+rmse(r1,houseTrainPart$valid)
+rmse(r2,houseTrainPart$valid)
+rmse(r3,houseTrainPart$valid)
+rmse(r4,houseTrainPart$valid)
+rmse(r5,houseTrainPart$valid)
+rmse(r6,houseTrainPart$valid)
+rmse(r7,houseTrainPart$valid)
+```
+add OverallQual
+
+step 2:
+```{r}
+r12 <- lm(log2(SalePrice) ~ OverallQual + log2(LotArea), data = houseTrainPart$train)
+r13 <- lm(log2(SalePrice) ~ OverallQual + GarageArea, data = houseTrainPart$train)
+r14 <- lm(log2(SalePrice) ~ OverallQual + MoSold, data = houseTrainPart$train)
+r15 <- lm(log2(SalePrice) ~ OverallQual + MSZoning, data = houseTrainPart$train)
+r16 <- lm(log2(SalePrice) ~ OverallQual + BldgType, data = houseTrainPart$train)
+r17 <- lm(log2(SalePrice) ~ OverallQual + Foundation, data = houseTrainPart$train)
+rmse(r12,houseTrainPart$valid)
+rmse(r13,houseTrainPart$valid)
+rmse(r14,houseTrainPart$valid)
+rmse(r15,houseTrainPart$valid)
+rmse(r16,houseTrainPart$valid)
+rmse(r17,houseTrainPart$valid)
+```
+add log2(LotArea)
+
+step 3:
+```{r}
+r123 <- lm(log2(SalePrice) ~ OverallQual + log2(LotArea) + GarageArea, data = houseTrainPart$train)
+r124 <- lm(log2(SalePrice) ~ OverallQual + log2(LotArea) + MoSold, data = houseTrainPart$train)
+r125 <- lm(log2(SalePrice) ~ OverallQual + log2(LotArea) + MSZoning, data = houseTrainPart$train)
+r126 <- lm(log2(SalePrice) ~ OverallQual + log2(LotArea) + BldgType, data = houseTrainPart$train)
+r127 <- lm(log2(SalePrice) ~ OverallQual + log2(LotArea) + Foundation, data = houseTrainPart$train)
+rmse(r123,houseTrainPart$valid)
+rmse(r124,houseTrainPart$valid)
+rmse(r125,houseTrainPart$valid)
+rmse(r126,houseTrainPart$valid)
+rmse(r127,houseTrainPart$valid)
+```
+add GarageArea
+
+step 4:
+```{r}
+r1234 <- lm(log2(SalePrice) ~ OverallQual + log2(LotArea) + GarageArea + MoSold, data = houseTrainPart$train)
+r1235 <- lm(log2(SalePrice) ~ OverallQual + log2(LotArea) + GarageArea + MSZoning, data = houseTrainPart$train)
+r1236 <- lm(log2(SalePrice) ~ OverallQual + log2(LotArea) + GarageArea + BldgType, data = houseTrainPart$train)
+r1237 <- lm(log2(SalePrice) ~ OverallQual + log2(LotArea) + GarageArea + Foundation, data = houseTrainPart$train)
+rmse(r1234,houseTrainPart$valid)
+rmse(r1235,houseTrainPart$valid)
+rmse(r1236,houseTrainPart$valid)
+rmse(r1237,houseTrainPart$valid)
+```
+add Foundation
+
+step 5:
+```{r}
+r12374 <- lm(log2(SalePrice) ~ OverallQual + log2(LotArea) + GarageArea + Foundation + MoSold, data = houseTrainPart$train)
+r12375 <- lm(log2(SalePrice) ~ OverallQual + log2(LotArea) + GarageArea + Foundation + MSZoning, data = houseTrainPart$train)
+r12376 <- lm(log2(SalePrice) ~ OverallQual + log2(LotArea) + GarageArea + Foundation + BldgType, data = houseTrainPart$train)
+rmse(r12374,houseTrainPart$valid)
+rmse(r12375,houseTrainPart$valid)
+rmse(r12376,houseTrainPart$valid)
+```
+add MSZoning
+
+step 6:
+```{r}
+r123754 <- lm(log2(SalePrice) ~ OverallQual + log2(LotArea) + GarageArea + Foundation + MSZoning + MoSold, data = houseTrainPart$train)
+r123756 <- lm(log2(SalePrice) ~ OverallQual + log2(LotArea) + GarageArea + Foundation + MSZoning + BldgType, data = houseTrainPart$train)
+rmse(r123754,houseTrainPart$valid)
+rmse(r123756,houseTrainPart$valid)
+```
+add moSold
+
+step 7:
+```{r}
+r1237564 <- lm(log2(SalePrice) ~ OverallQual + log2(LotArea) + GarageArea + Foundation + MSZoning + MoSold + BldgType, data = houseTrainPart$train)
+rmse(r1237564,houseTrainPart$valid)
+```
+stop.
+
+best rmse model: 
+log2(SalePrice) ~ OverallQual + log2(LotArea) + GarageArea + Foundation + MSZoning + MoSold
+```{r}
+rmse(r123754,houseTrainPart$test)
+```
+
+
+
+
+
+
+
+
+
+
+
