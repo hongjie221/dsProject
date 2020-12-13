@@ -331,14 +331,15 @@ r123756 <- lm(log2(SalePrice) ~ OverallQual + log2(LotArea) + GarageArea + Found
 rmse(r123754,houseTrainPart$valid)
 rmse(r123756,houseTrainPart$valid)
 ```
-add moSold
-step 7:
+stop.
+
+best rmse model: 
+log2(SalePrice) ~ OverallQual + log2(LotArea) + GarageArea + Foundation + MSZoning
+
+step 7: test the best model
 ```{r}
-
-
-
-r1237564 <- lm(log2(SalePrice) ~ OverallQual + log2(LotArea) + GarageArea + Foundation + MSZoning +  as.character(MoSold) + BldgType, data = houseTrainPart$train)
-rmse(r1237564,houseTrainPart$valid)
+rmse(r12375,houseTrainPart$test)
+summary(r12375)
 ```
 stop.
 
