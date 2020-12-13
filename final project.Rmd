@@ -1,6 +1,6 @@
 ---
 title: "final project"
-author: "Zixin Wu"
+author: "Zixin Wu, Hongjie Li, Wenkai Hu"
 date: "11/28/2020"
 output: pdf_document
 ---
