@@ -18,8 +18,10 @@ setwd("/Users/hongjie/Desktop/dsProject/house-prices-advanced-regression-techniq
 houseTest <- read.csv("test.csv")
 houseTrain <-read.csv("train.csv")
 house <- bind_rows(houseTest,houseTrain)
-house <- as_tibble(house)
-houseTrain <- as_tibble(houseTrain)
+house <- as_tibble(house) 
+houseTrain <- as_tibble(houseTrain) %>%
+  mutate(MoSold_ord = as.string(MoSold),
+         MonSold = as.string(MoSold_ord))
 houseTrain
 ```
 
@@ -252,7 +254,7 @@ step 1:
 r1 <- lm(log2(SalePrice) ~ OverallQual, data = houseTrainPart$train)
 r2 <- lm(log2(SalePrice) ~ log2(LotArea), data = houseTrainPart$train)
 r3 <- lm(log2(SalePrice) ~ GarageArea, data = houseTrainPart$train)
-r4 <- lm(log2(SalePrice) ~ MoSold, data = houseTrainPart$train)
+r4 <- lm(log2(SalePrice) ~  as.character(MoSold), data = houseTrainPart$train)
 r5 <- lm(log2(SalePrice) ~ MSZoning, data = houseTrainPart$train)
 r6 <- lm(log2(SalePrice) ~ BldgType, data = houseTrainPart$train)
 r7 <- lm(log2(SalePrice) ~ Foundation, data = houseTrainPart$train)
@@ -270,7 +272,7 @@ step 2:
 ```{r}
 r12 <- lm(log2(SalePrice) ~ OverallQual + log2(LotArea), data = houseTrainPart$train)
 r13 <- lm(log2(SalePrice) ~ OverallQual + GarageArea, data = houseTrainPart$train)
-r14 <- lm(log2(SalePrice) ~ OverallQual + MoSold, data = houseTrainPart$train)
+r14 <- lm(log2(SalePrice) ~ OverallQual + as.character(MoSold), data = houseTrainPart$train)
 r15 <- lm(log2(SalePrice) ~ OverallQual + MSZoning, data = houseTrainPart$train)
 r16 <- lm(log2(SalePrice) ~ OverallQual + BldgType, data = houseTrainPart$train)
 r17 <- lm(log2(SalePrice) ~ OverallQual + Foundation, data = houseTrainPart$train)
@@ -286,7 +288,7 @@ add log2(LotArea)
 step 3:
 ```{r}
 r123 <- lm(log2(SalePrice) ~ OverallQual + log2(LotArea) + GarageArea, data = houseTrainPart$train)
-r124 <- lm(log2(SalePrice) ~ OverallQual + log2(LotArea) + MoSold, data = houseTrainPart$train)
+r124 <- lm(log2(SalePrice) ~ OverallQual + log2(LotArea) +  as.character(MoSold), data = houseTrainPart$train)
 r125 <- lm(log2(SalePrice) ~ OverallQual + log2(LotArea) + MSZoning, data = houseTrainPart$train)
 r126 <- lm(log2(SalePrice) ~ OverallQual + log2(LotArea) + BldgType, data = houseTrainPart$train)
 r127 <- lm(log2(SalePrice) ~ OverallQual + log2(LotArea) + Foundation, data = houseTrainPart$train)
@@ -300,7 +302,7 @@ add GarageArea
 
 step 4:
 ```{r}
-r1234 <- lm(log2(SalePrice) ~ OverallQual + log2(LotArea) + GarageArea + MoSold, data = houseTrainPart$train)
+r1234 <- lm(log2(SalePrice) ~ OverallQual + log2(LotArea) + GarageArea +  as.character(MoSold), data = houseTrainPart$train)
 r1235 <- lm(log2(SalePrice) ~ OverallQual + log2(LotArea) + GarageArea + MSZoning, data = houseTrainPart$train)
 r1236 <- lm(log2(SalePrice) ~ OverallQual + log2(LotArea) + GarageArea + BldgType, data = houseTrainPart$train)
 r1237 <- lm(log2(SalePrice) ~ OverallQual + log2(LotArea) + GarageArea + Foundation, data = houseTrainPart$train)
@@ -313,7 +315,7 @@ add Foundation
 
 step 5:
 ```{r}
-r12374 <- lm(log2(SalePrice) ~ OverallQual + log2(LotArea) + GarageArea + Foundation + MoSold, data = houseTrainPart$train)
+r12374 <- lm(log2(SalePrice) ~ OverallQual + log2(LotArea) + GarageArea + Foundation + as.character(MoSold), data = houseTrainPart$train)
 r12375 <- lm(log2(SalePrice) ~ OverallQual + log2(LotArea) + GarageArea + Foundation + MSZoning, data = houseTrainPart$train)
 r12376 <- lm(log2(SalePrice) ~ OverallQual + log2(LotArea) + GarageArea + Foundation + BldgType, data = houseTrainPart$train)
 rmse(r12374,houseTrainPart$valid)
@@ -324,19 +326,34 @@ add MSZoning
 
 step 6:
 ```{r}
-r123754 <- lm(log2(SalePrice) ~ OverallQual + log2(LotArea) + GarageArea + Foundation + MSZoning + MoSold, data = houseTrainPart$train)
+r123754 <- lm(log2(SalePrice) ~ OverallQual + log2(LotArea) + GarageArea + Foundation + MSZoning + as.character(MoSold), data = houseTrainPart$train)
 r123756 <- lm(log2(SalePrice) ~ OverallQual + log2(LotArea) + GarageArea + Foundation + MSZoning + BldgType, data = houseTrainPart$train)
 rmse(r123754,houseTrainPart$valid)
 rmse(r123756,houseTrainPart$valid)
 ```
 add moSold
-
 step 7:
 ```{r}
-r1237564 <- lm(log2(SalePrice) ~ OverallQual + log2(LotArea) + GarageArea + Foundation + MSZoning + MoSold + BldgType, data = houseTrainPart$train)
+
+
+
+r1237564 <- lm(log2(SalePrice) ~ OverallQual + log2(LotArea) + GarageArea + Foundation + MSZoning +  as.character(MoSold) + BldgType, data = houseTrainPart$train)
 rmse(r1237564,houseTrainPart$valid)
 ```
 stop.
+
+```{r}
+index <- c(1, 2, 3, 4, 5, 6, 7)
+variable <- c('OverallQual', 'log2(LotArea)', 'GarageArea', 'Foundation', 'MSZoing',  'BldgType', 'Mosold')
+RMSE <- c(0.3094053, 0.2587239, 0.2415357, 0.2314295, 0.2274026, 0.2275816, 0.2299854)
+step_model1 <- tibble(index = index, variable = factor(variable,levels=variable), RMSE = RMSE)
+
+ggplot(step_model1, aes(y=RMSE)) +
+  geom_point(aes(x=variable)) +
+  geom_line(aes(x=index)) +
+  labs(title="Stepwise model selection") +
+  theme_minimal()
+```
 
 best rmse model: 
 log2(SalePrice) ~ OverallQual + log2(LotArea) + GarageArea + Foundation + MSZoning + MoSold
